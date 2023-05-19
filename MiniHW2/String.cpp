@@ -7,7 +7,7 @@ char String::at(unsigned index) const
 
 char String::back() const
 {
-	return text[actualSize - 1];
+	return text[size - 1];
 }
 
 char String::front() const
@@ -22,33 +22,34 @@ char* String::str() const
 
 unsigned String::length() const
 {
-	return actualSize;
+	return size;
 }
 
 unsigned String::capacity() const
 {
-	return this->cap;
+	return this->capacitance;
 }
 
 bool String::empty() const
 {
-	return this->text == nullptr || this->actualSize == 0;
+	return this->text == nullptr || this->size == 0;
 }
 
 String& String::append(const char* appText)
 {
-	String temp(this->text, this->actualSize + strlen(appText));
-	for (size_t i = this->actualSize, j = 0; i < temp.actualSize; i++, j++)
+	unsigned addSize = strlen(appText);
+	if (addSize + this->size >= this->capacitance * 2 + 1)
 	{
-		temp.text[i] = appText[j];
+		resize();
 	}
-	*this = temp;
+	strcat(this->text, appText);
+	this->size += addSize;
 	return *this;
 }
 
 void String::clear()
 {
-	for (size_t i = 0; i < this->actualSize; i++)
+	for (size_t i = 0; i < this->size; i++)
 	{
 		this->text[i] = '\0';
 	}
@@ -66,7 +67,7 @@ bool String::equals(const String& other) const
 
 int String::find(const char symb) const
 {
-	for (size_t i = 0; i < this->actualSize; i++)
+	for (size_t i = 0; i < this->size; i++)
 	{
 		if (this->text[i] == symb)
 		{
@@ -78,8 +79,7 @@ int String::find(const char symb) const
 
 void String::shrinkToFit()
 {
-	resizeShrink();
-	this->cap = this->actualSize;
+	this->capacitance = this->size - 1;
 }
 
 void swapNums(unsigned& num1, unsigned& num2) {
@@ -96,23 +96,23 @@ void swapText(char* txt1, char* txt2) {
 
 void String::swap(String& other)
 {
-	swapNums(this->actualSize, other.actualSize);
-	swapNums(this->cap, other.cap);
+	swapNums(this->size, other.size);
+	swapNums(this->capacitance, other.capacitance);
 	swapText(this->text, other.text);
 }
 
 unsigned String::find(const String& other) const
 {
-	if (this->actualSize < other.actualSize)
+	if (this->size < other.size)
 	{
 		return -1;
 	}
-	for (size_t i = 0; i < this->actualSize; i++)
+	for (size_t i = 0; i < this->size; i++)
 	{
 		if (this->text[i] == other.text[0])
 		{
 			bool areEqual = true;
-			for (size_t j = 1; j < other.actualSize; j++) {
+			for (size_t j = 1; j < other.size; j++) {
 				if (this->text[i + j] != other.text[j])
 				{
 					areEqual = false;
@@ -138,28 +138,15 @@ bool String::contains(const char symbol) const
 	return find(symbol) != -1;
 }
 
-String::String() : text(nullptr), cap(0), actualSize(0)
+String::String() : text(nullptr), capacitance(0), size(0)
 {}
 
 String::String(const char* text)
 {
-	actualSize = strlen(text) + 1;
-	cap = 2 * actualSize;
-	this->text = new char[cap];
+	size = strlen(text);
+	capacitance = 2 * size + 1;
+	this->text = new char[capacitance];
 	strcpy(this->text, text);
-}
-
-String::String(const char* text, unsigned size)
-{
-	this->actualSize = size + 1;
-	this->cap = 2 * this->actualSize;
-	this->text = new char[this->cap];
-	this->text[this->actualSize - 1] = '\0';
-	for (size_t i = 0; i < this->actualSize - 1; i++)
-	{
-		this->text[i] = text[i];
-	}
-
 }
 
 String::String(const String& other)
@@ -182,23 +169,20 @@ String::~String()
 	free();
 }
 
-void String::resizeGrow()
+void String::resize()
 {
-	String temp(this->text, 2 * this->actualSize);
-	*this = temp;
-}
-
-void String::resizeShrink()
-{
-	String temp(this->text, this->actualSize / 2);
-	*this = temp;
+	this->capacitance *= 2;
+	char* temp = new char[capacitance];
+	strcpy(temp, this->text);
+	free();
+	this->text = temp;
 }
 
 void String::copy(const String& other)
 {
-	this->cap = other.cap;
-	this->actualSize = other.actualSize;
-	this->text = new char[this->cap];
+	this->capacitance = other.capacitance;
+	this->size = other.size;
+	this->text = new char[this->capacitance];
 	strcpy(this->text, other.text);
 }
 

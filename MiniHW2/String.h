@@ -27,12 +27,11 @@ public:
 	String& operator=(const String&);
 	~String();
 private:
-	void resizeGrow();
-	void resizeShrink();
+	
 	void copy(const String&);
 	void free();
 	char* text;
-	unsigned cap;
-	unsigned actualSize;
+	unsigned capacity;
+	unsigned size;
 };
 
